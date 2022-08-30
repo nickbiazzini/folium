@@ -8,6 +8,8 @@ import pandas as pd
 from branca.element import Element
 import branca
 import branca.colormap as cm
+from branca.colormap import linear
+
 
 url = ("c:/Users/Windows 10/Desktop/maps/arquivos")
 mteste = f'{url}/mteste.json'
@@ -20,6 +22,18 @@ dp = dados.set_index('Codigo_IBGE')['Populacao']
 dados.Populacao = np.log10(dados.Populacao)
 
 m = folium.Map([-14.240073, -53.180502], zoom_start=7)
+colormap = linear.YlOrRd_09.scale(6,20)
+folium.GeoJson(
+    ler,
+    name='mapa',
+    style_function=lambda feature: {
+        'fillColor': colormap(ler[feature[0]]),
+        'color': 'black',
+        'weight': 0.3,
+    }
+    
+).add_to(m)
+
 
 c = folium.Choropleth(
     geo_data=ler,
@@ -28,7 +42,8 @@ c = folium.Choropleth(
     columns=["Codigo_IBGE", "Populacao"],
      key_on='feature.properties.GEOCODIGO',
     # fill_color="RdPu",
-    fill_color='OrRd',
+    # style_function= style,
+    # fill_color='OrRd',
     fill_opacity=0.4,
     # threshold_scale=[0,2,4,6,8],
     line_weight=0.5,
@@ -47,9 +62,14 @@ e = Element("""
   }
 """)
 
-color = c.color_scale
+colormap.caption='População'
+colormap.add_to(m)
+
+# color = c.color_scale
 html = c.get_root()
 html.script.get_root().render()
 html.script.add_child(e)
+
+folium.LayerControl().add_to(m)
 
 m.save('testebranca.html')
